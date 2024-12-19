@@ -4,6 +4,7 @@ import {AppRoute, AuthorizationStatus, FavouriteStatus} from '../../const.ts';
 import {useAppDispatch, useAppSelector} from '../../hooks';
 import { changeFavouriteStatusAction } from '../../store/api-actions.ts';
 import { updateOffers } from '../../store/offers-data/offers-data';
+import { updateNearbyOffer } from '../../store/current-offer-data/current-offer-data';
 import { getAuthorizationStatus } from '../../store/user-process/selectors';
 import {memo, useCallback} from 'react';
 
@@ -11,9 +12,10 @@ type PlaceCardProps = {
   offer: Offer;
   onMouseEnter: (id: string) => void;
   onMouseLeave: () => void;
+  isNearby?: boolean;
 }
 
-function PlaceCard({offer, onMouseEnter, onMouseLeave}: PlaceCardProps): JSX.Element{
+function PlaceCard({offer, onMouseEnter, onMouseLeave, isNearby = false}: PlaceCardProps): JSX.Element {
   const { id, isPremium, previewImage, price, rating, title, type, isFavorite } = offer;
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -26,12 +28,16 @@ function PlaceCard({offer, onMouseEnter, onMouseLeave}: PlaceCardProps): JSX.Ele
       } else {
         const newStatus = isFavorite ? FavouriteStatus.Remove : FavouriteStatus.Add;
         const updatedOffer = { ...offer, isFavorite: !isFavorite };
+
         dispatch(updateOffers(updatedOffer));
+        if (isNearby) {
+          dispatch(updateNearbyOffer(updatedOffer));
+        }
 
         await dispatch(changeFavouriteStatusAction({ offerId: id, status: newStatus }));
       }
     })();
-  }, [authorizationStatus, navigate, isFavorite, offer, dispatch, id]);
+  }, [authorizationStatus, navigate, isFavorite, offer, dispatch, id, isNearby]);
 
   return (
     <article
@@ -57,7 +63,7 @@ function PlaceCard({offer, onMouseEnter, onMouseLeave}: PlaceCardProps): JSX.Ele
           </div>
           <button
             className={`place-card__bookmark-button button ${
-              authorizationStatus === AuthorizationStatus.Auth && offer.isFavorite
+              authorizationStatus === AuthorizationStatus.Auth && isFavorite
                 ? 'place-card__bookmark-button--active'
                 : ''
             }`}
@@ -86,8 +92,10 @@ function PlaceCard({offer, onMouseEnter, onMouseLeave}: PlaceCardProps): JSX.Ele
 }
 
 const MemoizedPlaceCard = memo(PlaceCard,
-  (
-    prevProps,
-    nextProps
-  ) => prevProps.offer.id === nextProps.offer.id && prevProps.offer.isFavorite === nextProps.offer.isFavorite);
+  (prevProps, nextProps) =>
+    prevProps.offer.id === nextProps.offer.id &&
+    prevProps.offer.isFavorite === nextProps.offer.isFavorite &&
+    prevProps.isNearby === nextProps.isNearby
+);
+
 export default MemoizedPlaceCard;

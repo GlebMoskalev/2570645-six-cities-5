@@ -27,7 +27,13 @@ export const currentOfferData = createSlice({
     setOfferDetailsLoadingStatus: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
+    updateNearbyOffer: (state, action: PayloadAction<Offer>) => {
+      const index = state.nearbyOffers.findIndex((offer) => offer.id === action.payload.id);
+      if (index !== -1) {
+        state.nearbyOffers[index] = action.payload;
+      }
+    }
   },
 });
 
-export const { loadOfferDetails, sendReview, setOfferDetailsLoadingStatus } = currentOfferData.actions;
+export const { loadOfferDetails, sendReview, setOfferDetailsLoadingStatus, updateNearbyOffer } = currentOfferData.actions;
